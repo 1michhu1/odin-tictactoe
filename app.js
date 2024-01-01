@@ -82,26 +82,21 @@ const Game = function() {
     }
     
     const playRound = (x,y) => {
-        // assuming valid x,y position
-        console.log(`${getActivePlayer().name}'s turn`)
+        if (!board.canInsert(x,y)) return
         board.insert(getActivePlayer().shape, x, y)
         numTurns++
-        
+
         if (isThereWinner()) {
-            console.log(`winner is ${getActivePlayer().name}`)
             winner = getActivePlayer().name
 
         }
         else if (isDraw()) { 
-            console.log("draw")
             winner = "draw"
         }
         else {
             switchPlayer()
         }
         
-        console.log(board.getBoard())
-
     }
 
 
@@ -112,16 +107,19 @@ const Game = function() {
 function ScreenController() {
     const game = Game()
     const boardDiv = document.querySelector('.grid')
+    const heading = document.querySelector("h1")
 
     const generateGrid = () => {
-        const activePlayer  =game.getActivePlayer()
-        document.querySelector("h1").textContent = activePlayer.name + "'s turn"
+        const activePlayer =game.getActivePlayer()
         const board = game.getBoard()
+
+        heading.textContent = activePlayer.name + "'s turn"
         for (let i=0; i < board.length; i++) {
             for (let j=0; j < board.length; j++){
                 cell = document.createElement('button')
                 cell.setAttribute(`data-x`, j)
                 cell.setAttribute(`data-y`, i)
+                cell.setAttribute('type', 'button')
                 boardDiv.appendChild(cell)
             }
         }
@@ -129,10 +127,9 @@ function ScreenController() {
 
     const updateScreen = () => {
         const board = game.getBoard()
-        // let board = [['x', 'x', 'o'], ['o', 'o', 'x'], ['x', 'x', 'o']]
+        // let board = [['x', 'x', 'o'], ['o', 'o', 'x'], ['x', 'x', 'o']]\
+        let result = game.getWinner()
         const activePlayer = game.getActivePlayer()
-        heading = document.querySelector("h1")
-        heading.textContent = activePlayer.name + "'s turn"
 
         for (let i=0; i < board.length; i++) {
             for (let j=0; j < board.length; j++){
@@ -140,25 +137,32 @@ function ScreenController() {
                 cell.textContent = board[i][j]
             }
         }
-
+        if (result == undefined) {
+            heading.textContent = activePlayer.name + "'s turn"
+        } else if (result.name == 'draw') {
+            heading.textContent = "Draw!"
+        } else {
+            heading.textContent = result + " has won!"
+        }
     }
 
     function clickHandlerBoard(e) {
         const selectedCell = e.target
-        game.playRound(selectedCell.dataset.x, selectedCell.dataset.y)
-        updateScreen();
+
+        // exit if button not pressed
+        if (selectedCell.tagName != "BUTTON") return
+
+        if (!game.getWinner()) {
+            game.playRound(selectedCell.dataset.x, selectedCell.dataset.y)
+            updateScreen();
+  
+        } 
     }
 
     boardDiv.addEventListener("click", clickHandlerBoard)
     generateGrid()
+
 }
 
-
-// newGame = Game()
-
-// while (newGame.getWinner() == undefined) {
-//     pos = newGame.getValidPos()
-//     newGame.playRound(pos[0], pos[1])
-// }
 
 ScreenController()
